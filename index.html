@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ぴよちぇっかー</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 700px;
+            margin: 30px auto;
+        }
+        h1 {
+            color: #0078d4;
+            margin-bottom: 25px;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .upload-btn {
+            background-color: #0078d4;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            margin-top: 15px;
+            display: inline-block;
+        }
+        .upload-btn:hover {
+            background-color: #005a9e;
+        }
+        #imagePreview {
+            max-width: 100%;
+            height: auto;
+            margin-top: 25px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: none; /* 初期は非表示 */
+        }
+        #detectionCanvas {
+            max-width: 100%;
+            height: auto;
+            margin-top: 25px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: none; /* 初期は非表示 */
+        }
+        #results {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #e6f2fa;
+            border-radius: 8px;
+            border: 1px solid #cce0f0;
+            text-align: left;
+            display: none; /* 初期は非表示 */
+        }
+        #results h2 {
+            color: #0078d4;
+            margin-top: 0;
+            font-size: 20px;
+        }
+        .tag-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #cce0f0;
+        }
+        .tag-item:last-child {
+            border-bottom: none;
+        }
+        .tag-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .probability {
+            color: #005a9e;
+        }
+        #loadingSpinner {
+            display: none; /* 初期は非表示 */
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #0078d4;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background: #ccc;
+            margin: 40px 0;
+        }
+        #imageUrlInput {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .threshold-control {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            border: 1px solid #d0e0f0;
+            text-align: left;
+        }
+        .threshold-control label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #0078d4;
+        }
+        .threshold-control input[type="range"] {
+            width: calc(100% - 100px); /* スライダーの幅を調整 */
+            vertical-align: middle;
+        }
+        .threshold-control span {
+            display: inline-block;
+            width: 80px;
+            text-align: right;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+        .reset-btn {
+            background-color: #6c757d; /* グレー系 */
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            margin-left: 10px;
+        }
+        .reset-btn:hover {
+            background-color: #5a6268;
+        }
+        .footer-info {
+            margin-top: 50px;
+            font-size: 0.8em; /* 小さな文字 */
+            color: #777;
+            text-align: center;
+        }
+        .footer-info a {
+            color: #0078d4;
+            text-decoration: none;
+        }
+        .footer-info a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ぴよちゃん画像認識システム ぴよちぇっかー</h1>
+        <p>画像をアップロードするか、URLを入力して、ぴよちゃんをみつけよう！</p>
+	
+	<h2>持っている画像をアップロードしてぴよちぇっく</h2>
+        <label for="imageUpload" class="upload-btn">ここから画像をアップロード</label>
+        <input type="file" id="imageUpload" accept="image/*">
+
+        <hr>
+
+        <h2>または画像URLからぴよちぇっく</h2>
+        <input type="text" id="imageUrlInput" placeholder="ここから画像のURLを入力" style="width: 80%; padding: 10px; margin-top: 15px; border: 1px solid #ddd; border-radius: 4px;">
+        <button id="predictByUrlBtn" class="upload-btn">URLから予測</button>
+
+        <div class="threshold-control">
+            <label for="confidenceThreshold">
+                うまく検出できないときはここで閾値を調整してね: <span id="thresholdValue">94%</span>
+                <button id="resetThresholdBtn" class="reset-btn">リセット</button>
+            </label>
+            <input type="range" id="confidenceThreshold" min="0" max="100" value="94">
+        </div>
+
+        <img id="imagePreview" src="#" alt="画像プレビュー">
+        <canvas id="detectionCanvas"></canvas> <div id="loadingSpinner"></div>
+
+        <div id="results">
+            <h2>予測結果</h2>
+            <div id="predictionList">
+                </div>
+        </div>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <div class="footer-info">
+        <p>※本サイトは二次創作ファンサイト、動作テスト用ページです。著作権を含むすべての権利はキャラクター制作者様に帰属します。</p>
+        <p><a href="https://nonoyamaaki.com/" target="_blank" rel="noopener noreferrer">ののやまあきんのショップ</a></p>
+        <p><a href="https://x.com/nononono_aki">ののやまあきさんのX</a></p>
+    </div>
+    <script>
+        // === ここをあなたの情報に置き換えてください ===
+        const PREDICTION_KEY = "3we4H4p4b3OzpJGShGHyvJQLTNTI6Aj4R3Pg4ckqzQ73HYFwhJRfJQQJ99BFACi0881XJ3w3AAAIACOG1aQd"; // あなたの予測キー
+        const PREDICTION_URL_FOR_FILE = "https://piyocheck1-prediction.cognitiveservices.azure.com/customvision/v3.0/Prediction/a3627239-3e28-4fe1-80a3-dca4325d5d4c/detect/iterations/Iteration5/image"; // ファイルアップロード用URL (末尾が /image)
+        const PREDICTION_URL_FOR_URL = "https://piyocheck1-prediction.cognitiveservices.azure.com/customvision/v3.0/Prediction/a3627239-3e28-4fe1-80a3-dca4325d5d4c/detect/iterations/Iteration5/url";   // URL入力用URL (末尾が /url)
+        // ===========================================
+
+        const DEFAULT_THRESHOLD = 94; // デフォルトの信頼度閾値（%）
+
+        const imageUpload = document.getElementById('imageUpload');
+        const imageUrlInput = document.getElementById('imageUrlInput');
+        const predictByUrlBtn = document.getElementById('predictByUrlBtn');
+        const imagePreview = document.getElementById('imagePreview');
+        const detectionCanvas = document.getElementById('detectionCanvas');
+        const ctx = detectionCanvas.getContext('2d');
+
+        const resultsDiv = document.getElementById('results');
+        const predictionList = document.getElementById('predictionList');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const errorMessageDiv = document.getElementById('errorMessage');
+
+        const confidenceThresholdSlider = document.getElementById('confidenceThreshold');
+        const thresholdValueSpan = document.getElementById('thresholdValue');
+        const resetThresholdBtn = document.getElementById('resetThresholdBtn');
+
+        let currentImageData = null; // 現在表示中の画像データ (Base64 URL) を保持
+        let currentPredictionsData = null; // 現在の予測結果データを保持
+
+        // 初期表示をクリア
+        function clearResults() {
+            imagePreview.style.display = 'none';
+            detectionCanvas.style.display = 'none';
+            resultsDiv.style.display = 'none';
+            predictionList.innerHTML = '';
+            errorMessageDiv.textContent = '';
+            ctx.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height); // Canvasをクリア
+            currentImageData = null;
+            currentPredictionsData = null;
+        }
+        clearResults(); // ページ読み込み時に一度実行
+
+        // 閾値スライダーの初期値を設定
+        confidenceThresholdSlider.value = DEFAULT_THRESHOLD;
+        thresholdValueSpan.textContent = `${DEFAULT_THRESHOLD}%`;
+
+        // --- 閾値スライダーのイベントリスナー ---
+        confidenceThresholdSlider.addEventListener('input', function() {
+            thresholdValueSpan.textContent = `${this.value}%`;
+            // 新しい閾値で結果を再描画
+            if (currentImageData && currentPredictionsData) {
+                displayResults(currentPredictionsData);
+            }
+        });
+
+        // --- 閾値リセットボタンのイベントリスナー ---
+        resetThresholdBtn.addEventListener('click', function() {
+            confidenceThresholdSlider.value = DEFAULT_THRESHOLD;
+            thresholdValueSpan.textContent = `${DEFAULT_THRESHOLD}%`;
+            if (currentImageData && currentPredictionsData) {
+                displayResults(currentPredictionsData);
+            }
+        });
+
+
+        // --- 画像ファイルアップロードのイベントリスナー ---
+        imageUpload.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                clearResults(); // 結果をクリア
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result; // プレビュー画像をセット
+                    currentImageData = e.target.result; // 画像データを保持
+                    predictImageFromFile(file); // API呼び出し (ファイルモード)
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // --- URLから予測ボタンのイベントリスナー ---
+        predictByUrlBtn.addEventListener('click', function() {
+            const imageUrl = imageUrlInput.value.trim();
+            if (imageUrl) {
+                clearResults(); // 結果をクリア
+                imagePreview.src = imageUrl; // プレビュー画像をセット
+                currentImageData = imageUrl; // 画像データを保持
+                predictImageFromUrl(imageUrl); // API呼び出し (URLモード)
+            } else {
+                errorMessageDiv.textContent = '予測したい画像のURLを入力してください。';
+            }
+        });
+
+        // --- ファイルアップロードからの予測関数 ---
+        async function predictImageFromFile(file) {
+            loadingSpinner.style.display = 'block'; // ローディングスピナー表示
+            errorMessageDiv.textContent = ''; // エラーメッセージをクリア
+
+            try {
+                const arrayBuffer = await file.arrayBuffer(); // ファイルをArrayBufferに変換
+                const imageData = new Uint8Array(arrayBuffer); // Uint8Arrayに変換
+
+                const response = await fetch(PREDICTION_URL_FOR_FILE, {
+                    method: 'POST',
+                    headers: {
+                        'Prediction-Key': PREDICTION_KEY,
+                        'Content-Type': 'application/octet-stream'
+                    },
+                    body: imageData
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`APIエラー: ${response.status} - ${errorText}`);
+                }
+
+                const data = await response.json();
+                currentPredictionsData = data; // 予測結果データを保持
+                displayResults(data); // 表示関数を呼び出し
+
+            } catch (error) {
+                console.error("ファイル予測エラー:", error);
+                errorMessageDiv.textContent = `ファイルからの予測に失敗しました: ${error.message || '不明なエラー'}`;
+                clearResults(); // エラー時は全てクリア
+            } finally {
+                loadingSpinner.style.display = 'none'; // ローディングスピナー非表示
+            }
+        }
+
+        // --- URLからの予測関数 ---
+        async function predictImageFromUrl(imageUrl) {
+            loadingSpinner.style.display = 'block'; // ローディングスピナー表示
+            errorMessageDiv.textContent = ''; // エラーメッセージをクリア
+
+            try {
+                const response = await fetch(PREDICTION_URL_FOR_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Prediction-Key': PREDICTION_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ "Url": imageUrl })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`APIエラー: ${response.status} - ${errorText}`);
+                }
+
+                const data = await response.json();
+                currentPredictionsData = data; // 予測結果データを保持
+                displayResults(data); // 表示関数を呼び出し
+
+            } catch (error) {
+                console.error("URL予測エラー:", error);
+                errorMessageDiv.textContent = `URLからの予測に失敗しました: ${error.message || '不明なエラー'}`;
+                clearResults(); // エラー時は全てクリア
+            } finally {
+                loadingSpinner.style.display = 'none'; // ローディングスピナー非表示
+            }
+        }
+
+        // --- 結果表示関数（バウンディングボックス描画含む、閾値適用） ---
+        function displayResults(data) {
+            predictionList.innerHTML = ''; // 以前の結果をクリア
+            resultsDiv.style.display = 'block'; // 結果表示エリアを表示
+            detectionCanvas.style.display = 'block'; // Canvasを表示
+
+            const currentThreshold = parseFloat(confidenceThresholdSlider.value) / 100; // スライダーの値（%）を0-1の範囲に変換
+
+            // 画像をCanvasに描画して、その上に検出結果を描画
+            const img = new Image();
+            img.onload = function() {
+                // Canvasのサイズを画像のサイズに合わせる
+                detectionCanvas.width = img.width;
+                detectionCanvas.height = img.height;
+
+                ctx.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height); // キャンバスをクリア
+                ctx.drawImage(img, 0, 0); // 画像を描画
+
+                if (data && data.predictions && data.predictions.length > 0) {
+                    // 閾値以上の予測のみをフィルタリング
+                    const filteredPredictions = data.predictions.filter(p => p.probability >= currentThreshold);
+
+                    if (filteredPredictions.length === 0) {
+                        predictionList.innerHTML = `<p>信頼度 ${currentThreshold * 100}% 以上のオブジェクトは検出されませんでした。</p>`;
+                    } else {
+                        // 信頼度が高い順にソート (オプション)
+                        filteredPredictions.sort((a, b) => b.probability - a.probability);
+
+                        filteredPredictions.forEach(prediction => {
+                            const probabilityPercent = (prediction.probability * 100).toFixed(1);
+                            const tagItem = document.createElement('div');
+                            tagItem.classList.add('tag-item');
+                            tagItem.innerHTML = `
+                                <span class="tag-name">${prediction.tagName}</span>
+                                <span class="probability">${probabilityPercent}%</span>
+                            `;
+                            predictionList.appendChild(tagItem);
+
+                            // バウンディングボックスの描画
+                            const bbox = prediction.boundingBox;
+                            // Custom Visionのバウンディングボックスは0〜1の相対座標なので、画像サイズに変換
+                            const x = bbox.left * img.width;
+                            const y = bbox.top * img.height;
+                            const width = bbox.width * img.width;
+                            const height = bbox.height * img.height;
+
+                            ctx.beginPath();
+                            ctx.rect(x, y, width, height);
+                            ctx.lineWidth = 3;
+                            ctx.strokeStyle = '#00FF00'; // 緑色の枠線
+                            ctx.stroke();
+
+                            // ラベルと確率の描画
+                            ctx.fillStyle = '#00FF00'; // テキストの色
+                            ctx.font = 'bold 18px Arial'; // フォントサイズとスタイル
+                            ctx.fillText(`${prediction.tagName} (${probabilityPercent}%)`, x + 5, y + 20); // バウンディングボックスの少し下にテキスト
+                        });
+                    }
+                } else {
+                    predictionList.innerHTML = '<p>オブジェクトは検出されませんでした。</p>';
+                }
+            };
+            // imagePreview.srcは、ファイルアップロードまたはURL入力で既に設定されている
+            img.src = imagePreview.src;
+        }
+    </script>
+</body>
+</html>
