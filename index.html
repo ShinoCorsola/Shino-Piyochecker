@@ -193,10 +193,10 @@
 
         <div class="threshold-control">
             <label for="confidenceThreshold">
-                うまく検出できないときはここで閾値を調整してね: <span id="thresholdValue">94%</span>
+                うまく検出できないときはここで閾値を調整してね: <span id="thresholdValue">95%</span>
                 <button id="resetThresholdBtn" class="reset-btn">リセット</button>
             </label>
-            <input type="range" id="confidenceThreshold" min="0" max="100" value="94">
+            <input type="range" id="confidenceThreshold" min="0" max="100" value="95">
         </div>
 
         <img id="imagePreview" src="#" alt="画像プレビュー">
@@ -216,10 +216,10 @@
         <p><a href="https://x.com/nononono_aki">ののやまあきさんのX</a></p>
     </div>
     <script>
-        // === ここをあなたの情報に置き換えてください ===
-        const PREDICTION_KEY = "3we4H4p4b3OzpJGShGHyvJQLTNTI6Aj4R3Pg4ckqzQ73HYFwhJRfJQQJ99BFACi0881XJ3w3AAAIACOG1aQd"; // あなたの予測キー
-        const PREDICTION_URL_FOR_FILE = "https://piyocheck1-prediction.cognitiveservices.azure.com/customvision/v3.0/Prediction/a3627239-3e28-4fe1-80a3-dca4325d5d4c/detect/iterations/Iteration5/image"; // ファイルアップロード用URL (末尾が /image)
-        const PREDICTION_URL_FOR_URL = "https://piyocheck1-prediction.cognitiveservices.azure.com/customvision/v3.0/Prediction/a3627239-3e28-4fe1-80a3-dca4325d5d4c/detect/iterations/Iteration5/url";   // URL入力用URL (末尾が /url)
+        // === ここを更新 ===
+        const PREDICTION_KEY = "3we4H4p4b3OzpJGShGHyvJQLTNTI6Aj4R3Pg4ckqzQ73HYFwhJRfJQQJ99BFACi0881XJ3w3AAAIACOG1aQd"; // 予測キー
+        const PREDICTION_URL_FOR_FILE = "https://piyocheck1-prediction.cognitiveservices.azure.com/customvision/v3.0/Prediction/a3627239-3e28-4fe1-80a3-dca4325d5d4c/detect/iterations/Iteration6/image"; // ファイルアップロード用URL (末尾が /image)
+        const PREDICTION_URL_FOR_URL = "https://piyocheck1-prediction.cognitiveservices.azure.com/customvision/v3.0/Prediction/a3627239-3e28-4fe1-80a3-dca4325d5d4c/detect/iterations/Iteration6/url";   // URL入力用URL (末尾が /url)
         // ===========================================
 
         const DEFAULT_THRESHOLD = 94; // デフォルトの信頼度閾値（%）
